@@ -1,10 +1,9 @@
 import PropTypes from 'prop-types';
 // material
 import { styled } from '@mui/material/styles';
-import { Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment } from '@mui/material';
+import { Stack, Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment } from '@mui/material';
 // component
 import Iconify from '../../../components/Iconify';
-
 // ----------------------------------------------------------------------
 
 const RootStyle = styled(Toolbar)(({ theme }) => ({
@@ -27,15 +26,28 @@ const SearchStyle = styled(OutlinedInput)(({ theme }) => ({
   },
 }));
 
+//---------------------------------------------------------------------
+
 // ----------------------------------------------------------------------
 
 UserListToolbar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
+  exportData: PropTypes.array,
   onFilterName: PropTypes.func,
+  refresh: PropTypes.func,
+  onExportLinkPress: PropTypes.func,
+  onDeleteButtonPress: PropTypes.func,
 };
 
-export default function UserListToolbar({ numSelected, filterName, onFilterName }) {
+export default function UserListToolbar({
+  numSelected,
+  filterName,
+  onFilterName,
+  exportData,
+  onExportLinkPress,
+  onDeleteButtonPress,
+}) {
   return (
     <RootStyle
       sx={{
@@ -53,7 +65,7 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName 
         <SearchStyle
           value={filterName}
           onChange={onFilterName}
-          placeholder="Search user..."
+          placeholder="Search Role..."
           startAdornment={
             <InputAdornment position="start">
               <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
@@ -63,18 +75,14 @@ export default function UserListToolbar({ numSelected, filterName, onFilterName 
       )}
 
       {numSelected > 0 ? (
-        <Tooltip title="Delete">
-          <IconButton>
-            <Iconify icon="eva:trash-2-fill" />
-          </IconButton>
-        </Tooltip>
-      ) : (
-        <Tooltip title="Filter list">
-          <IconButton>
-            <Iconify icon="ic:round-filter-list" />
-          </IconButton>
-        </Tooltip>
-      )}
+        <Stack direction="row">
+          <Tooltip title="Delete" onClick={onDeleteButtonPress}>
+            <IconButton>
+              <Iconify icon="eva:trash-2-fill" />
+            </IconButton>
+          </Tooltip>
+        </Stack>
+      ) : null}
     </RootStyle>
   );
 }
