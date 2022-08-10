@@ -1,49 +1,40 @@
 // material
 import { Card, Stack, Avatar, Button, Box, Radio, Container, Typography } from '@mui/material';
 // components
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ImagePicker } from 'react-file-picker';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import TextField from '@mui/material/TextField';
+import Iconify from '../../components/Iconify';
+
 import { useEffect, useState } from 'react';
-import { roleUpdate } from '../services/roleServices';
-
-import Page from '../components/Page';
-
+import { roleAdd } from '../../services/roleServices';
+import Page from '../../components/Page';
+import { id } from 'date-fns/locale';
 var options = [];
-
-export default function EditRole() {
+export default function AddRole() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { lineData } = location.state;
   const [open, setOpen] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
-
-  const [id_add, setId_add] = useState(lineData.id);
-  const [name_add, setName_add] = useState(lineData.name);
-  const [created_add, setCreated_add] = useState(lineData.created);
-
-  const [status_add, setStatus_add] = useState(lineData.status);
-
-  const [selectedValue, setSelectedValue] = useState(lineData.gender);
-  const [selectedValue1, setSelectedValue1] = useState(lineData.status);
-
-  const [images, setImages] = useState(lineData.image);
+  const [id_add, setId_add] = useState('');
+  const [name_add, setName_add] = useState('');
+  const [created_add, setCreated_add] = useState('');
+  const [status_add, setStatus_add] = useState('');
+  const [selectedValue1, setSelectedValue1] = useState('Active');
+  const [images, setImages] = useState('');
   const [state, setState] = useState({
+    id: false,
     name: false,
     created: false,
-    image: false,
     status: false,
+    image: false,
   });
   // ----------------------------------------------------------------------
-  console.log('hii', location.state);
-  const handleChange = (event) => {
-    setSelectedValue(event.target.value);
-  };
+
   const handleChange1 = (event) => {
     setSelectedValue1(event.target.value);
   };
-  useEffect(() => {}, []);
+
   const submitQA = async () => {
     if (name_add.trim() === '') {
       setState({ ...state, name: true });
@@ -51,46 +42,48 @@ export default function EditRole() {
     } else if (created_add.trim() === '') {
       setState({ ...state, created: true });
       return;
+    } else if (images.trim() === '') {
+      setState({ ...state, images: true });
+      return;
     }
+
     const body = {
-      _id: lineData._id,
       id: id_add,
       name: name_add,
       image: images,
       created: created_add,
       status: selectedValue1,
     };
-    const res = await roleUpdate(body);
-    if (res.statusCode === 200) {
+    console.log(body);
+    const res = await roleAdd(body);
+    console.log(res);
+    if (res.data.statusCode === 200) {
       setOpen(false);
       setId_add('');
       setName_add('');
-
-      setStatus_add('');
-
       setCreated_add('');
+      setStatus_add('');
       setImages('');
-
       setOpenAlert(true);
       navigate('/dashboard/roleManager');
     }
   };
-  console.log('data ', selectedValue);
+
   return (
-    <Page title="Dashboard:Edit Role ">
+    <Page title="Dashboard:Add Role ">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Edit Role
+            Add Role
           </Typography>
         </Stack>
 
         <Card>
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
             <TextField
-              value={id_add}
               required
               error={state.name}
+              value={id_add}
               onChange={(e) => {
                 setId_add(e.target.value);
                 setState({ ...state, id: false });
@@ -100,9 +93,9 @@ export default function EditRole() {
               sx={{ flex: 1, m: 1 }}
             />
             <TextField
-              value={name_add}
               required
               error={state.name}
+              value={name_add}
               onChange={(e) => {
                 setName_add(e.target.value);
                 setState({ ...state, name: false });
@@ -114,9 +107,9 @@ export default function EditRole() {
           </Stack>
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
             <TextField
-              value={created_add}
               required
               error={state.name}
+              value={created_add}
               onChange={(e) => {
                 setCreated_add(e.target.value);
                 setState({ ...state, created: false });
@@ -150,7 +143,14 @@ export default function EditRole() {
             </Stack>
             <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ margin: 2 }}>
               <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                <Typography variant="subtitle1" noWrap>
+                <Typography
+                  variant="subtitle1"
+                  noWrap
+                  value={status_add}
+                  onChange={(e) => {
+                    setStatus_add(e.target.value);
+                  }}
+                >
                   Status
                 </Typography>
                 Active

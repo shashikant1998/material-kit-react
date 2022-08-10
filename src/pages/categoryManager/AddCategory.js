@@ -5,14 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import { ImagePicker } from 'react-file-picker';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import TextField from '@mui/material/TextField';
-import Iconify from '../components/Iconify';
+import Iconify from '../../components/Iconify';
 
 import { useEffect, useState } from 'react';
-import { roleAdd } from '../services/roleServices.js';
-import Page from '../components/Page';
-import { id } from 'date-fns/locale';
+import { categoryAdd } from '../../services/categoryServices';
+import Page from '../../components/Page';
 var options = [];
-export default function AddRole() {
+export default function AddCategory() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
@@ -23,7 +22,7 @@ export default function AddRole() {
   const [selectedValue1, setSelectedValue1] = useState('Active');
   const [images, setImages] = useState('');
   const [state, setState] = useState({
-    id: false,
+    // id: false,
     name: false,
     created: false,
     status: false,
@@ -42,9 +41,6 @@ export default function AddRole() {
     } else if (created_add.trim() === '') {
       setState({ ...state, created: true });
       return;
-    } else if (images.trim() === '') {
-      setState({ ...state, images: true });
-      return;
     }
 
     const body = {
@@ -55,7 +51,7 @@ export default function AddRole() {
       status: selectedValue1,
     };
     console.log(body);
-    const res = await roleAdd(body);
+    const res = await categoryAdd(body);
     console.log(res);
     if (res.data.statusCode === 200) {
       setOpen(false);
@@ -65,16 +61,16 @@ export default function AddRole() {
       setStatus_add('');
       setImages('');
       setOpenAlert(true);
-      navigate('/dashboard/roleManager');
+      navigate('/dashboard/categoryManager');
     }
   };
 
   return (
-    <Page title="Dashboard:Add Role ">
+    <Page title="Dashboard:Add Category">
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Add Role
+            Add Category
           </Typography>
         </Stack>
 
@@ -100,7 +96,7 @@ export default function AddRole() {
                 setName_add(e.target.value);
                 setState({ ...state, name: false });
               }}
-              label="Role"
+              label="Category"
               id="outlined-name"
               sx={{ flex: 1, m: 1 }}
             />
@@ -177,7 +173,7 @@ export default function AddRole() {
             <Button
               variant="contained"
               onClick={() => {
-                navigate('/dashboard/roleManager');
+                navigate('/dashboard/categoryManager');
               }}
             >
               Back

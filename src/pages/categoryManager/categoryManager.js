@@ -25,21 +25,21 @@ import {
 } from '@mui/material';
 // components
 
-import Page from '../components/Page';
-import Label from '../components/Label';
-import Scrollbar from '../components/Scrollbar';
-import Iconify from '../components/Iconify';
-import SearchNotFound from '../components/SearchNotFound';
-import { UserListHead, UserListToolbar, UserMoreMenu } from '../sections/@dashboard/user';
+import Page from '../../components/Page';
+import Label from '../../components/Label';
+import Scrollbar from '../../components/Scrollbar';
+import Iconify from '../../components/Iconify';
+import SearchNotFound from '../../components/SearchNotFound';
+import { UserListHead, CategoryListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
 
-import { roleDelete, roleView, roleEdit } from '../services/roleServices';
+import { categoryDelete, categoryView, categoryEdit } from '../../services/categoryServices';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'id', label: 'Id', alignRight: false },
 
-  { id: 'name', label: 'Role Name', alignRight: false },
+  { id: 'name', label: 'Category Name', alignRight: false },
   { id: 'created', label: 'Created', alignRight: false },
   { id: 'status', label: 'Status', alignRight: false },
 
@@ -77,14 +77,14 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function RoleManager() {
+export default function CategoryManager() {
   const navigate = useNavigate();
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [user_id, setUser_id] = useState('');
   const [lineData, setLineData] = useState('');
-  const [roleList, setRoleList] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
 
   const [name_update, setName_update] = useState('');
   const [course_update, setCourse_update] = useState('');
@@ -104,7 +104,7 @@ export default function RoleManager() {
 
   async function ViewAll() {
     var data = [];
-    const viewAll = await roleView();
+    const viewAll = await categoryView();
 
     for (var i = 0; i < viewAll.data.length; ++i) {
       var obj = {
@@ -119,13 +119,13 @@ export default function RoleManager() {
       data.push(obj);
     }
     setSelected([]);
-    setRoleList(data);
+    setCategoryList(data);
   }
 
   const headerKeys = Object.keys(Object.assign({}, ...array));
 
   const handleClickOpen1 = async () => {
-    const res = await roleEdit(user_id);
+    const res = await categoryEdit(user_id);
     setName_update(res.data[0].name);
     setCourse_update(res.data[0].course);
     setEmail_update(res.data[0].email);
@@ -145,8 +145,8 @@ export default function RoleManager() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = roleList.map((n) => n._id);
-      const newCollected = roleList.map((n) => n);
+      const newSelecteds = categoryList.map((n) => n._id);
+      const newCollected = categoryList.map((n) => n);
       setAllSelected(newCollected);
       setSelected(newSelecteds);
       return;
@@ -193,7 +193,7 @@ export default function RoleManager() {
   const handleDeleteButtonPress = async () => {
     try {
       selected.map(async (m) => {
-        const res = await roleDelete(m);
+        const res = await categoryDelete(m);
         ViewAll(res);
       });
     } catch (error) {
@@ -201,33 +201,33 @@ export default function RoleManager() {
     }
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roleList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - categoryList.length) : 0;
 
-  const filteredUsers = applySortFilter(roleList, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(categoryList, getComparator(order, orderBy), filterName);
 
   const isUserNotFound = filteredUsers.length === 0;
 
   return (
-    <Page title="Dashboard:Employee Manager">
+    <Page title="Dashboard:Category Manager">
       <Container maxWidth="100%">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Role Manager
+            Category Manager
           </Typography>
           <Stack style={{ textAlign: 'center' }}></Stack>
           <Button
             variant="contained"
             onClick={() => {
-              navigate('/dashboard/addRole');
+              navigate('/dashboard/addCategory');
             }}
             startIcon={<Iconify icon="eva:plus-fill" />}
           >
-            New Role
+            New Category
           </Button>
         </Stack>
 
         <Card sx={{ maxWidth: '100%' }}>
-          <UserListToolbar
+          <CategoryListToolbar
             numSelected={selected.length}
             filterName={filterName}
             exportData={allSeceted}
@@ -285,11 +285,11 @@ export default function RoleManager() {
                         <TableCell align="right">
                           <UserMoreMenu
                             onDeleteButtonPress={async () => {
-                              const res = await roleDelete(_id);
+                              const res = await categoryDelete(_id);
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editRole', {
+                              navigate('/dashboard/editCategory', {
                                 state: { lineData: row },
                               });
                             }}
@@ -346,7 +346,7 @@ export default function RoleManager() {
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/editRole', {
+              navigate('/dashboard/editCategory', {
                 state: { lineData },
               });
             }}
@@ -363,7 +363,7 @@ export default function RoleManager() {
             primary="Delete"
             primaryTypographyProps={{ variant: 'body2' }}
             onClick={async (e) => {
-              const res = await roleDelete(user_id);
+              const res = await categoryDelete(user_id);
               ViewAll(res);
             }}
           />
