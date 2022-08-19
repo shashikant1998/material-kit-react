@@ -1,15 +1,12 @@
-const axios = require("axios");
-const config = require("../config/config");
-const role = require("../config/roleConfig");
+const axios = require('axios');
+const config = require('../config/config');
+const role = require('../config/roleConfig');
 
-module.exports.roleAdd = async (
-  body,
-  url = config.protocol + config.hostname + ":" + config.port + role.add
-) => {
+module.exports.roleAdd = async (body, url = config.protocol + config.hostname + ':' + config.port + role.add) => {
   var res;
   try {
     res = await axios.post(url, body);
-    console.log("hii", res.data);
+    console.log('hii', res.data);
     return res.data;
   } catch (error) {
     console.log(error.response.data);
@@ -17,9 +14,7 @@ module.exports.roleAdd = async (
   }
 };
 
-module.exports.roleView = async (
-  url = config.protocol + config.hostname + ":" + config.port + role.view
-) => {
+module.exports.roleView = async (url = config.protocol + config.hostname + ':' + config.port + role.view) => {
   var res;
   try {
     res = await axios.get(url);
@@ -31,10 +26,7 @@ module.exports.roleView = async (
   }
 };
 
-module.exports.roleEdit = async (
-  _id,
-  url = config.protocol + config.hostname + ":" + config.port + role.edit
-) => {
+module.exports.roleEdit = async (_id, url = config.protocol + config.hostname + ':' + config.port + role.edit) => {
   var res;
   try {
     res = await axios.get(url + _id);
@@ -46,10 +38,7 @@ module.exports.roleEdit = async (
   }
 };
 
-module.exports.roleDelete = async (
-  _id,
-  url = config.protocol + config.hostname + ":" + config.port + role.delete
-) => {
+module.exports.roleDelete = async (_id, url = config.protocol + config.hostname + ':' + config.port + role.delete) => {
   var res;
   try {
     res = await axios.delete(url + _id);
@@ -61,13 +50,22 @@ module.exports.roleDelete = async (
   }
 };
 
-module.exports.roleUpdate = async (
-  body,
-  url = config.protocol + config.hostname + ":" + config.port + role.update
-) => {
+module.exports.roleUpdate = async (body, url = config.protocol + config.hostname + ':' + config.port + role.update) => {
   var res;
   try {
     res = await axios.put(url, body);
+    console.log(res.data);
+    return res.data;
+  } catch (error) {
+    console.log(error.response.data);
+    return error.response.data;
+  }
+};
+
+module.exports.RoleStatus = async (body, url = config.protocol + config.hostname + ':' + config.port + role.Status) => {
+  var res;
+  try {
+    res = await axios.post(url, body);
     console.log(res.data);
     return res.data;
   } catch (error) {

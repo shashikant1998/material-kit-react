@@ -10,7 +10,8 @@ import NotFound from './pages/Page404';
 import Register from './pages/Register';
 import Products from './pages/Products';
 import DashboardApp from './pages/DashboardApp';
-import EditRole from './pages/roleManager/EditRole';
+import RoleEdit from './pages/roleManager/roleEdit';
+// import EditRole from './pages/roleManager/EditRole';
 import RoleManager from './pages/roleManager/RoleManager';
 import AddCategory from './pages/categoryManager/AddCategory';
 import EditCategory from './pages/categoryManager/EditCategory';
@@ -27,7 +28,8 @@ export default function Router() {
         { path: 'app', element: <DashboardApp /> },
         { path: 'roleManager', element: <RoleManager /> },
         { path: 'addRole', element: <AddRole /> },
-        { path: 'editRole', element: <EditRole /> },
+        // { path: 'editRole', element: <EditRole /> },
+        { path: 'roleEdit', element: <RoleEdit /> },
         { path: 'products', element: <Products /> },
         { path: 'blog', element: <Blog /> },
         { path: 'addCategory', element: <AddCategory /> },

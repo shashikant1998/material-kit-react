@@ -4,4 +4,5 @@ module.exports = {
   delete: '/api/v1/category/categoryDelete?_id=',
   edit: '/api/v1/category/categoryEdit?_id=',
   update: '/api/v1/category/categoryUpdate',
+  Status: '/api/v1/category/updateStatus',
 };

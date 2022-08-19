@@ -73,3 +73,18 @@ module.exports.categoryUpdate = async (
     return error.response.data;
   }
 };
+
+module.exports.CategoryStatus = async (
+  body,
+  url = config.protocol + config.hostname + ':' + config.port + category.Status
+) => {
+  var res;
+  try {
+    res = await axios.post(url, body);
+    console.log(res.data);
+    return res.data;
+  } catch (error) {
+    console.log(error.response.data);
+    return error.response.data;
+  }
+};

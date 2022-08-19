@@ -1,14 +1,21 @@
 import { filter } from 'lodash';
+import PropTypes from 'prop-types';
 import { sentenceCase } from 'change-case';
 import { useEffect, useState, useRef } from 'react';
 import { Link as RouterLink, Navigate, useNavigate } from 'react-router-dom';
+import { Alert, Switch } from '@mui/material';
+import { Toolbar, Tooltip, OutlinedInput, InputAdornment } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
 
 // material
 import {
   Card,
   Table,
   Stack,
-  Avatar,
+  IconButton,
   Button,
   Checkbox,
   TableRow,
@@ -24,24 +31,22 @@ import {
   ListItemText,
 } from '@mui/material';
 // components
-
+import TextField from '@mui/material/TextField';
 import Page from '../../components/Page';
 import Label from '../../components/Label';
 import Scrollbar from '../../components/Scrollbar';
 import Iconify from '../../components/Iconify';
 import SearchNotFound from '../../components/SearchNotFound';
-import { UserListHead, UserListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
-
-import { roleDelete, roleView, roleEdit } from '../../services/roleServices';
-
+import { UserListHead, UserMoreMenu } from '../../sections/@dashboard/user';
+import { roleAdd } from '../../services/roleServices';
+import { roleDelete, roleView, roleEdit, RoleStatus } from '../../services/roleServices';
+import Collapse from '@mui/material/Collapse';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'id', label: 'Id', alignRight: false },
-
   { id: 'name', label: 'Role Name', alignRight: false },
   { id: 'created', label: 'Created', alignRight: false },
-  { id: 'status', label: 'Status', alignRight: false },
+  { id: 'status', label: 'status', alignRight: false },
 
   { id: '' },
 ];
@@ -85,31 +90,45 @@ export default function RoleManager() {
   const [user_id, setUser_id] = useState('');
   const [lineData, setLineData] = useState('');
   const [roleList, setRoleList] = useState([]);
-
+  const [open, setOpen] = useState(false);
+  const [created_add, setCreated_add] = useState('');
+  const [status_add, setStatus_add] = useState('');
   const [name_update, setName_update] = useState('');
   const [course_update, setCourse_update] = useState('');
   const [email_update, setEmail_update] = useState('');
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('created');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open1, setOpen1] = useState(false);
   const [allSeceted, setAllSelected] = useState([]);
   const [array, setArray] = useState([]);
+  const [openAlert, setOpenAlert] = useState(false);
+  const [openAlert1, setOpenAlert1] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+  const [images, setImages] = useState('');
+  const [selectedValue1, setSelectedValue1] = useState(lineData.status);
+
+  const [state, setState] = useState({
+    name: false,
+    created: false,
+    status: false,
+  });
+  const [name_add, setName_add] = useState('');
 
   useEffect(() => {
     ViewAll();
   }, []);
 
-  async function ViewAll() {
+  const ViewAll = async () => {
     var data = [];
     const viewAll = await roleView();
 
     for (var i = 0; i < viewAll.data.length; ++i) {
       var obj = {
         _id: viewAll.data[i]._id,
-        id: viewAll.data[i].id,
+        // id: viewAll.data[i].id,
         name: viewAll.data[i].name,
         created: viewAll.data[i].created,
         status: viewAll.data[i].status,
@@ -120,11 +139,42 @@ export default function RoleManager() {
     }
     setSelected([]);
     setRoleList(data);
-  }
+  };
+
+  const handleClickOpenAlert = () => {
+    setOpenAlert(true);
+  };
+
+  const submitQA = async () => {
+    if (name_add.trim() === '') {
+      setState({ ...state, name: true });
+      return;
+    }
+
+    const body = {
+      name: name_add,
+      status: selectedValue1,
+    };
+    // console.log(body);
+    const res = await roleAdd(body);
+    if (res.statusCode === 200) {
+      console.log('hii', res.data);
+      setOpen(false);
+      setName_add('');
+      setCreated_add('');
+      setStatus_add('');
+      setImages('');
+      setOpenAlert(true);
+      setTimeout(() => {
+        setOpenAlert(false);
+      }, 3000);
+    }
+    ViewAll();
+  };
 
   const headerKeys = Object.keys(Object.assign({}, ...array));
 
-  const handleClickOpen1 = async () => {
+  const handleClickOpen = async () => {
     const res = await roleEdit(user_id);
     setName_update(res.data[0].name);
     setCourse_update(res.data[0].course);
@@ -138,7 +188,7 @@ export default function RoleManager() {
   };
 
   const handleRequestSort = (event, property) => {
-    const isAsc = orderBy === property && order === 'asc';
+    const isAsc = orderBy === property && order === 'desc';
     setOrder(isAsc ? 'desc' : 'asc');
     setOrderBy(property);
   };
@@ -189,11 +239,20 @@ export default function RoleManager() {
   const handleFilterByName = (event) => {
     setFilterName(event.target.value);
   };
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+  };
 
   const handleDeleteButtonPress = async () => {
     try {
       selected.map(async (m) => {
         const res = await roleDelete(m);
+        setOpenAlert1(true);
+        setTimeout(() => {
+          setOpenAlert1(false);
+        }, 3000);
+        setOpenDelete(false);
+
         ViewAll(res);
       });
     } catch (error) {
@@ -214,8 +273,21 @@ export default function RoleManager() {
           <Typography variant="h4" gutterBottom>
             Role Manager
           </Typography>
-          <Stack style={{ textAlign: 'center' }}></Stack>
-          <Button
+
+          <TextField
+            required
+            error={state.name}
+            value={name_add}
+            onChange={(e) => {
+              setName_add(e.target.value);
+              setState({ ...state, name: false });
+            }}
+            label="Role"
+            id="outlined-name"
+            sx={{ flex: 1, m: 5 }}
+          />
+
+          {/* <Button
             variant="contained"
             onClick={() => {
               navigate('/dashboard/addRole');
@@ -223,8 +295,21 @@ export default function RoleManager() {
             startIcon={<Iconify icon="eva:plus-fill" />}
           >
             New Role
+          </Button> */}
+          <Button variant="contained" onClick={submitQA}>
+            Add
           </Button>
         </Stack>
+        <Collapse in={openAlert}>
+          <Alert aria-hidden={true} severity="success">
+            Role Added Successfully
+          </Alert>
+        </Collapse>
+        <Collapse in={openAlert1}>
+          <Alert aria-hidden={true} severity="success">
+            Role Delete Successfully
+          </Alert>
+        </Collapse>
 
         <Card sx={{ maxWidth: '100%' }}>
           <UserListToolbar
@@ -232,6 +317,8 @@ export default function RoleManager() {
             filterName={filterName}
             exportData={allSeceted}
             onFilterName={handleFilterByName}
+            list={selected}
+            refresh={ViewAll}
             onDeleteButtonPress={handleDeleteButtonPress}
           />
 
@@ -251,6 +338,12 @@ export default function RoleManager() {
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                     const { id, _id, image, name, created, status } = row;
                     const isItemSelected = selected.indexOf(_id) !== -1;
+                    // var date = created.format('DD/MM/YYYY');
+                    var d = new Date(created);
+                    var date = d.getDate();
+                    var month = d.getMonth() + 1; // Since getMonth() returns month from 0-11 not 1-12
+                    var year = d.getFullYear();
+                    var newDate = date + '-' + month + '-' + year;
 
                     return (
                       <TableRow
@@ -264,32 +357,37 @@ export default function RoleManager() {
                         <TableCell padding="checkbox">
                           <Checkbox checked={isItemSelected} onChange={(event) => handleClick(event, row)} />
                         </TableCell>
-                        <TableCell align="left">{id}</TableCell>
 
-                        <TableCell component="th" scope="row" padding="normal">
-                          <Stack direction="row" alignItems="center" spacing={2}>
-                            <Avatar alt={name} src={image} />
-                            <Typography variant="subtitle2" noWrap>
-                              {name}
-                            </Typography>
-                          </Stack>
-                        </TableCell>
-                        <TableCell align="left">{created}</TableCell>
-
+                        <TableCell align="left">{name}</TableCell>
+                        <TableCell align="left">{newDate}</TableCell>
                         <TableCell align="left">
-                          <Label variant="ghost" color={(status === 'Inactive' && 'error') || 'success'}>
-                            {sentenceCase('Active')}
-                          </Label>
+                          <Switch
+                            checked={status}
+                            onChange={async (e) => {
+                              const body = { _id: _id, status: !status };
+                              var res = await RoleStatus(body);
+                              await ViewAll();
+                            }}
+                          />
                         </TableCell>
+                        {/* <TableCell align="left" onClick={statusChange}>
+                          <Label variant="ghost" color={(status === 'Inactive' && 'error') || 'success'}>
+                            {sentenceCase(status)}
+                          </Label>
+                        </TableCell> */}
 
                         <TableCell align="right">
                           <UserMoreMenu
                             onDeleteButtonPress={async () => {
                               const res = await roleDelete(_id);
+                              setOpenAlert1(true);
+                              setTimeout(() => {
+                                setOpenAlert1(false);
+                              }, 3000);
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editRole', {
+                              navigate('/dashboard/roleEdit', {
                                 state: { lineData: row },
                               });
                             }}
@@ -329,7 +427,6 @@ export default function RoleManager() {
           />
         </Card>
       </Container>
-
       <Menu
         open={isOpen}
         anchorEl={ref.current}
@@ -341,12 +438,12 @@ export default function RoleManager() {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <MenuItem sx={{ color: 'text.secondary' }}>
-          <ListItemIcon onClick={handleClickOpen1}>
+          <ListItemIcon onClick={handleClickOpen}>
             <Iconify icon="eva:edit-fill" width={24} height={24} />
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/editRole', {
+              navigate('/dashboard/roleEdit', {
                 state: { lineData },
               });
             }}
@@ -354,9 +451,16 @@ export default function RoleManager() {
             primaryTypographyProps={{ variant: 'body2' }}
           />
         </MenuItem>
+        <Dialog open={openDelete} onClose={handleCloseDelete}>
+          <DialogTitle>Are you sure you want to Delete ?</DialogTitle>
 
+          <DialogActions>
+            <Button onClick={handleCloseDelete}>No</Button>
+            <Button onClick={handleDeleteButtonPress}>Yes</Button>
+          </DialogActions>
+        </Dialog>
         <MenuItem component={RouterLink} to="#" sx={{ color: 'text.secondary' }}>
-          <ListItemIcon>
+          <ListItemIcon onClick={handleDeleteButtonPress}>
             <Iconify icon="eva:trash-2-outline" width={24} height={24} />
           </ListItemIcon>
           <ListItemText
@@ -370,5 +474,117 @@ export default function RoleManager() {
         </MenuItem>
       </Menu>
     </Page>
+  );
+}
+
+const RootStyle = styled(Toolbar)(({ theme }) => ({
+  height: 96,
+  display: 'flex',
+  justifyContent: 'space-between',
+  padding: theme.spacing(0, 1, 0, 3),
+}));
+
+const SearchStyle = styled(OutlinedInput)(({ theme }) => ({
+  width: 240,
+  transition: theme.transitions.create(['box-shadow', 'width'], {
+    easing: theme.transitions.easing.easeInOut,
+    duration: theme.transitions.duration.shorter,
+  }),
+  '&.Mui-focused': { width: 320, boxShadow: theme.customShadows.z8 },
+  '& fieldset': {
+    borderWidth: `1px !important`,
+    borderColor: `${theme.palette.grey[500_32]} !important`,
+  },
+}));
+
+// ----------------------------------------------------------------------
+
+UserListToolbar.propTypes = {
+  numSelected: PropTypes.number,
+  filterName: PropTypes.string,
+  onFilterName: PropTypes.func,
+  refresh: PropTypes.func,
+};
+
+function UserListToolbar({ numSelected, filterName, onFilterName, list, refresh }) {
+  const [openDelete, setOpenDelete] = useState(false);
+  const [openAlert, setOpenAlert] = useState(false);
+
+  const handleClickDeleteOpen = () => {
+    console.log(list);
+
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+  };
+
+  const deleteAPI = async () => {
+    for (var i = 0; i < list.length; ++i) {
+      var res = await roleDelete(list[i]);
+      console.log(res.data);
+      setOpenAlert(true);
+      setTimeout(() => {
+        setOpenAlert(false);
+      }, 3000);
+    }
+
+    setOpenDelete(false);
+    await refresh();
+  };
+  return (
+    <RootStyle
+      sx={{
+        ...(numSelected > 0 && {
+          color: 'primary.main',
+          bgcolor: 'primary.lighter',
+        }),
+      }}
+    >
+      {numSelected > 0 ? (
+        <Typography component="div" variant="subtitle1">
+          {numSelected} selected
+        </Typography>
+      ) : (
+        <SearchStyle
+          value={filterName}
+          onChange={onFilterName}
+          placeholder="Search Role..."
+          startAdornment={
+            <InputAdornment position="start">
+              <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
+            </InputAdornment>
+          }
+        />
+      )}
+      <Collapse in={openAlert}>
+        <Alert aria-hidden={true} severity="success">
+          Role Delete Successfully
+        </Alert>
+      </Collapse>
+      {numSelected > 0 ? (
+        <Tooltip title="Delete">
+          <IconButton onClick={handleClickDeleteOpen}>
+            <Iconify icon="eva:trash-2-fill" />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Filter list">
+          <IconButton>
+            <Iconify icon="ic:round-filter-list" />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      <Dialog open={openDelete} onClose={handleCloseDelete}>
+        <DialogTitle>Are you sure you want to Delete ?</DialogTitle>
+
+        <DialogActions>
+          <Button onClick={handleCloseDelete}>No</Button>
+          <Button onClick={deleteAPI}>Yes</Button>
+        </DialogActions>
+      </Dialog>
+    </RootStyle>
   );
 }

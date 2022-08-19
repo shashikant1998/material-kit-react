@@ -6,7 +6,7 @@ import { ImagePicker } from 'react-file-picker';
 import PhotoCamera from '@mui/icons-material/PhotoCamera';
 import TextField from '@mui/material/TextField';
 import Iconify from '../../components/Iconify';
-
+import { categoryView } from '../../services/categoryServices';
 import { useEffect, useState } from 'react';
 import { categoryAdd } from '../../services/categoryServices';
 import Page from '../../components/Page';
@@ -15,6 +15,8 @@ export default function AddCategory() {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [openAlert, setOpenAlert] = useState(false);
+  const [selected, setSelected] = useState([]);
+  const [categoryList, setCategoryList] = useState([]);
   const [id_add, setId_add] = useState('');
   const [name_add, setName_add] = useState('');
   const [created_add, setCreated_add] = useState('');
@@ -22,11 +24,11 @@ export default function AddCategory() {
   const [selectedValue1, setSelectedValue1] = useState('Active');
   const [images, setImages] = useState('');
   const [state, setState] = useState({
-    // id: false,
+    //id: false,
     name: false,
     created: false,
     status: false,
-    image: false,
+    //image: false,
   });
   // ----------------------------------------------------------------------
 
@@ -34,28 +36,49 @@ export default function AddCategory() {
     setSelectedValue1(event.target.value);
   };
 
+  async function ViewAll() {
+    var data = [];
+    const viewAll = await categoryView();
+
+    for (var i = 0; i < viewAll.data.length; ++i) {
+      var obj = {
+        _id: viewAll.data[i]._id,
+        // id: viewAll.data[i].id,
+        name: viewAll.data[i].name,
+        created: viewAll.data[i].created,
+        status: viewAll.data[i].status,
+        image: viewAll.data[i].image,
+      };
+
+      data.push(obj);
+    }
+    setSelected([]);
+    setCategoryList(data);
+  }
+
   const submitQA = async () => {
     if (name_add.trim() === '') {
       setState({ ...state, name: true });
       return;
-    } else if (created_add.trim() === '') {
-      setState({ ...state, created: true });
-      return;
     }
+    // else if (created_add.trim() === '') {
+    //   setState({ ...state, created: true });
+    //   return;
+    // }
 
     const body = {
-      id: id_add,
+      // id: id_add,
       name: name_add,
-      image: images,
-      created: created_add,
-      status: selectedValue1,
+      // image: images,
+      // created: created_add,
+      // status: selectedValue1,
     };
     console.log(body);
     const res = await categoryAdd(body);
     console.log(res);
     if (res.data.statusCode === 200) {
       setOpen(false);
-      setId_add('');
+      //setId_add('');
       setName_add('');
       setCreated_add('');
       setStatus_add('');
@@ -63,6 +86,7 @@ export default function AddCategory() {
       setOpenAlert(true);
       navigate('/dashboard/categoryManager');
     }
+    ViewAll();
   };
 
   return (
@@ -76,7 +100,7 @@ export default function AddCategory() {
 
         <Card>
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
-            <TextField
+            {/* <TextField
               required
               error={state.name}
               value={id_add}
@@ -87,10 +111,11 @@ export default function AddCategory() {
               label="Id"
               id="outlined-name"
               sx={{ flex: 1, m: 1 }}
-            />
+            /> */}
             <TextField
               required
               error={state.name}
+              name="cat"
               value={name_add}
               onChange={(e) => {
                 setName_add(e.target.value);
@@ -101,7 +126,27 @@ export default function AddCategory() {
               sx={{ flex: 1, m: 1 }}
             />
           </Stack>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
+          <Stack direction="row" alignItems="center" mb={5} sx={{ margin: 2 }}>
+            <Avatar alt="images" src={images} sx={{ margin: 2 }} />
+            <ImagePicker
+              extensions={['jpg', 'jpeg', 'png']}
+              dims={{
+                minWidth: 100,
+                maxWidth: 1340,
+                minHeight: 100,
+                maxHeight: 1040,
+              }}
+              onChange={(base64) => setImages(base64)}
+              onError={(errMsg) => {
+                console.log(errMsg);
+              }}
+            >
+              <Button variant="outlined" startIcon={<PhotoCamera />}>
+                Upload
+              </Button>
+            </ImagePicker>
+          </Stack>
+          {/* <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
             <TextField
               required
               error={state.name}
@@ -114,9 +159,9 @@ export default function AddCategory() {
               id="outlined-name"
               sx={{ flex: 1, m: 1 }}
             />
-          </Stack>
+          </Stack> */}
 
-          <Stack direction="row" alignItems="center" justifyContent="space-evenly" mb={5} sx={{ margin: 2 }}>
+          {/* <Stack direction="row" alignItems="center" justifyContent="space-evenly" mb={5} sx={{ margin: 2 }}>
             <Stack direction="row" alignItems="center" mb={5} sx={{ margin: 2 }}>
               <Avatar alt="images" src={images} sx={{ margin: 2 }} />
               <ImagePicker
@@ -167,7 +212,7 @@ export default function AddCategory() {
                 />
               </Box>
             </Stack>
-          </Stack>
+          </Stack> */}
 
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
             <Button

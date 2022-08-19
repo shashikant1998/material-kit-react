@@ -1,16 +1,13 @@
 import { filter } from 'lodash';
-import { sentenceCase } from 'change-case';
 import { useEffect, useState, useRef } from 'react';
-import { Link as RouterLink, Navigate, useNavigate } from 'react-router-dom';
+import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { Alert, Switch } from '@mui/material';
-import { ImagePicker } from 'react-file-picker';
-import PhotoCamera from '@mui/icons-material/PhotoCamera';
+
 // material
 import {
   Card,
   Table,
   Stack,
-  Avatar,
   Button,
   Checkbox,
   TableRow,
@@ -28,19 +25,18 @@ import {
 // components
 import TextField from '@mui/material/TextField';
 import Page from '../../components/Page';
-import Label from '../../components/Label';
 import Scrollbar from '../../components/Scrollbar';
 import Iconify from '../../components/Iconify';
 import SearchNotFound from '../../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
-import { categoryAdd } from '../../services/categoryServices';
-import { categoryDelete, categoryView, categoryEdit, CategoryStatus } from '../../services/categoryServices';
+import { roleUpdate } from '../../services/roleServices';
+import { roleDelete, roleView, roleEdit, RoleStatus } from '../../services/roleServices';
 import Collapse from '@mui/material/Collapse';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Category Name', alignRight: false },
+  { id: 'name', label: 'Role Name', alignRight: false },
   { id: 'created', label: 'Created', alignRight: false },
   { id: 'status', label: 'status', alignRight: false },
 
@@ -78,14 +74,15 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function CategoryManager() {
+export default function RoleEdit() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { lineData } = location.state;
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [user_id, setUser_id] = useState('');
-  const [lineData, setLineData] = useState('');
-  const [categoryList, setCategoryList] = useState([]);
+  const [roleList, setRoleList] = useState([]);
   const [open, setOpen] = useState(false);
   const [created_add, setCreated_add] = useState('');
   const [status_add, setStatus_add] = useState('');
@@ -103,14 +100,14 @@ export default function CategoryManager() {
   const [openAlert, setOpenAlert] = useState(false);
   const [images, setImages] = useState('');
   const [selectedValue1, setSelectedValue1] = useState(lineData.status);
+  const [selectedValue, setSelectedValue] = useState(lineData.status);
 
   const [state, setState] = useState({
     name: false,
     created: false,
     status: false,
-    image: false,
   });
-  const [name_add, setName_add] = useState('');
+  const [name_add, setName_add] = useState(lineData.name);
 
   useEffect(() => {
     ViewAll();
@@ -118,7 +115,7 @@ export default function CategoryManager() {
 
   const ViewAll = async () => {
     var data = [];
-    const viewAll = await categoryView();
+    const viewAll = await roleView();
 
     for (var i = 0; i < viewAll.data.length; ++i) {
       var obj = {
@@ -133,8 +130,20 @@ export default function CategoryManager() {
       data.push(obj);
     }
     setSelected([]);
-    setCategoryList(data);
+    setRoleList(data);
   };
+
+  const handleClickOpenAlert = () => {
+    setOpenAlert(true);
+  };
+  console.log('hii', location.state);
+  const handleChange = (event) => {
+    setSelectedValue(event.target.value);
+  };
+  const handleChange1 = (event) => {
+    setSelectedValue1(event.target.value);
+  };
+
   const submitQA = async () => {
     if (name_add.trim() === '') {
       setState({ ...state, name: true });
@@ -142,42 +151,37 @@ export default function CategoryManager() {
     }
 
     const body = {
+      _id: lineData._id,
       name: name_add,
-      image: images,
       status: selectedValue1,
     };
-    console.log(body);
-    const res = await categoryAdd(body);
-    if (res.data.statusCode === 200) {
-      console.log(res.data);
+    const res = await roleUpdate(body);
+    if (res.statusCode === 200) {
+      console.log('hii', res.data);
       setOpen(false);
       setName_add('');
-      setCreated_add('');
       setStatus_add('');
+      setCreated_add('');
       setImages('');
-      // setNotify({
-      //   isOpen: true,
-      //   message: 'Submitted Successfully',
-      //   type: 'success',
-      // });
 
       setOpenAlert(true);
+      setTimeout(() => {
+        setOpenAlert(false);
+
+        navigate('/dashboard/roleManager');
+      }, 1000);
     }
-    ViewAll();
+    <Collapse in={openAlert}>
+      <Alert aria-hidden={true} severity="success">
+        Role Update Successfully
+      </Alert>
+    </Collapse>;
   };
 
-  const statusChange = async () => {
-    if ('status' == 'Active') {
-      console.log('Inactive');
-    } else {
-      console.log('Active');
-    }
-  };
-
-  const headerKeys = Object.keys(Object.assign({}, ...array));
+  //   const headerKeys = Object.keys(Object.assign({}, ...array));
 
   const handleClickOpen1 = async () => {
-    const res = await categoryEdit(user_id);
+    const res = await roleEdit(user_id);
     setName_update(res.data[0].name);
     setCourse_update(res.data[0].course);
     setEmail_update(res.data[0].email);
@@ -197,8 +201,8 @@ export default function CategoryManager() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = categoryList.map((n) => n._id);
-      const newCollected = categoryList.map((n) => n);
+      const newSelecteds = roleList.map((n) => n._id);
+      const newCollected = roleList.map((n) => n);
       setAllSelected(newCollected);
       setSelected(newSelecteds);
       return;
@@ -245,7 +249,7 @@ export default function CategoryManager() {
   const handleDeleteButtonPress = async () => {
     try {
       selected.map(async (m) => {
-        const res = await categoryDelete(m);
+        const res = await roleDelete(m);
         ViewAll(res);
       });
     } catch (error) {
@@ -253,69 +257,53 @@ export default function CategoryManager() {
     }
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - categoryList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roleList.length) : 0;
 
-  const filteredUsers = applySortFilter(categoryList, getComparator(order, orderBy), filterName);
+  const filteredUsers = applySortFilter(roleList, getComparator(order, orderBy), filterName);
 
   const isUserNotFound = filteredUsers.length === 0;
 
   return (
-    <Page title="Dashboard:Category Manager">
+    <Page title="Dashboard:Role Manager">
       <Container maxWidth="100%">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Category Manager
+            Role Manager
           </Typography>
 
           <TextField
+            value={name_add}
             required
             error={state.name}
-            value={name_add}
             onChange={(e) => {
               setName_add(e.target.value);
               setState({ ...state, name: false });
             }}
-            label="Category"
+            label="Role"
             id="outlined-name"
             sx={{ flex: 1, m: 5 }}
           />
-          <Stack direction="row" alignItems="center" mb={5} sx={{ margin: 2 }}>
-            <Avatar alt="images" src={images} sx={{ margin: 2 }} />
-            <ImagePicker
-              extensions={['jpg', 'jpeg', 'png']}
-              dims={{
-                minWidth: 100,
-                maxWidth: 1340,
-                minHeight: 100,
-                maxHeight: 1040,
-              }}
-              onChange={(base64) => setImages(base64)}
-              onError={(errMsg) => {
-                console.log(errMsg);
-              }}
-            >
-              <Button variant="outlined" startIcon={<PhotoCamera />}>
-                Upload
-              </Button>
-            </ImagePicker>
-          </Stack>
 
-          {/* <Button
-            variant="contained"
-            onClick={() => {
-              navigate('/dashboard/addRole');
-            }}
-            startIcon={<Iconify icon="eva:plus-fill" />}
-          >
-            New Role
-          </Button> */}
-          <Button variant="contained" onClick={submitQA}>
-            Submit
-          </Button>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
+            <Stack sx={{ margin: 2 }}>
+              {' '}
+              <Button
+                variant="contained"
+                onClick={() => {
+                  navigate('/dashboard/roleManager');
+                }}
+              >
+                Back
+              </Button>
+            </Stack>
+            <Button variant="contained" onClick={submitQA}>
+              Update
+            </Button>
+          </Stack>
         </Stack>
         <Collapse in={openAlert}>
           <Alert aria-hidden={true} severity="success">
-            This is a success alert — check it out!
+            Role Update Successfully
           </Alert>
         </Collapse>
 
@@ -344,6 +332,7 @@ export default function CategoryManager() {
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                     const { id, _id, image, name, created, status } = row;
                     const isItemSelected = selected.indexOf(_id) !== -1;
+                    var date = new Date(created).toLocaleDateString('en-US');
 
                     return (
                       <TableRow
@@ -359,22 +348,22 @@ export default function CategoryManager() {
                         </TableCell>
                         {/* <TableCell align="left">{id}</TableCell> */}
 
-                        <TableCell component="th" scope="row" padding="normal">
+                        {/* <TableCell component="th" scope="row" padding="normal">
                           <Stack direction="row" alignItems="center" spacing={2}>
                             <Avatar alt={name} src={image} />
                             <Typography variant="subtitle2" noWrap>
                               {name}
                             </Typography>
                           </Stack>
-                        </TableCell>
-                        {/* <TableCell align="left">{name}</TableCell> */}
-                        <TableCell align="left">{created}</TableCell>
+                        </TableCell> */}
+                        <TableCell align="left">{name}</TableCell>
+                        <TableCell align="left">{date.toString()}</TableCell>
                         <TableCell align="left">
                           <Switch
                             checked={status}
                             onChange={async (e) => {
                               const body = { _id: _id, status: !status };
-                              var res = await CategoryStatus(body);
+                              var res = await RoleStatus(body);
                               await ViewAll();
                             }}
                           />
@@ -388,11 +377,11 @@ export default function CategoryManager() {
                         <TableCell align="right">
                           <UserMoreMenu
                             onDeleteButtonPress={async () => {
-                              const res = await categoryDelete(_id);
+                              const res = await roleDelete(_id);
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editCategory', {
+                              navigate('/dashboard/editRole', {
                                 state: { lineData: row },
                               });
                             }}
@@ -449,7 +438,7 @@ export default function CategoryManager() {
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/editCategory', {
+              navigate('/dashboard/roleManager', {
                 state: { lineData },
               });
             }}
@@ -466,7 +455,7 @@ export default function CategoryManager() {
             primary="Delete"
             primaryTypographyProps={{ variant: 'body2' }}
             onClick={async (e) => {
-              const res = await categoryDelete(user_id);
+              const res = await roleDelete(user_id);
               ViewAll(res);
             }}
           />
