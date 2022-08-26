@@ -1,13 +1,14 @@
 import { filter } from 'lodash';
 import { useEffect, useState, useRef } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
-import { Alert, Switch } from '@mui/material';
-
 // material
 import {
   Card,
+  Collapse,
+  Alert,
   Table,
   Stack,
+  Avatar,
   Button,
   Checkbox,
   TableRow,
@@ -19,26 +20,27 @@ import {
   TablePagination,
   Menu,
   MenuItem,
+  Switch,
   ListItemIcon,
   ListItemText,
 } from '@mui/material';
 // components
-import TextField from '@mui/material/TextField';
 import Page from '../../components/Page';
+// import Label from '../components/Label';
 import Scrollbar from '../../components/Scrollbar';
 import Iconify from '../../components/Iconify';
 import SearchNotFound from '../../components/SearchNotFound';
-import { UserListHead, UserListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
-import { roleUpdate } from '../../services/roleServices';
-import { roleDelete, roleView, roleEdit, RoleStatus } from '../../services/roleServices';
-import Collapse from '@mui/material/Collapse';
-
+import { UserListHead, UserMoreMenu, SliderListToolbar } from '../../sections/@dashboard/user';
+import { sliderDelete, sliderView, sliderEdit, sliderStatus } from 'src/services/sliderServices';
+import AlertBar from '../../sections/@dashboard/user/AlertBar';
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Role Name', alignRight: false },
+  { id: 'name', label: 'Name', alignRight: false },
+  { id: 'image', label: 'Image', alignRight: false },
+  { id: 'type', label: 'Type', alignRight: false },
   { id: 'created', label: 'Created', alignRight: false },
-  { id: 'status', label: 'status', alignRight: false },
+  { id: 'status', label: 'Status', alignRight: false },
 
   { id: '' },
 ];
@@ -74,116 +76,51 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function RoleEdit() {
+export default function SliderManager() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { lineData } = location.state;
   const ref = useRef(null);
   const [isOpen, setIsOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [user_id, setUser_id] = useState('');
-  const [roleList, setRoleList] = useState([]);
-  const [open, setOpen] = useState(false);
-  const [created_add, setCreated_add] = useState('');
-  const [status_add, setStatus_add] = useState('');
-  const [name_update, setName_update] = useState('');
-  const [course_update, setCourse_update] = useState('');
-  const [email_update, setEmail_update] = useState('');
+  const [lineData, setLineData] = useState('');
+  const [sliderList, setSliderList] = useState([]);
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('created');
   const [filterName, setFilterName] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open1, setOpen1] = useState(false);
   const [allSeceted, setAllSelected] = useState([]);
-  const [array, setArray] = useState([]);
   const [openAlert, setOpenAlert] = useState(false);
-  const [images, setImages] = useState('');
-  const [selectedValue1, setSelectedValue1] = useState(lineData.status);
-  const [selectedValue, setSelectedValue] = useState(lineData.status);
-
-  const [state, setState] = useState({
-    name: false,
-    created: false,
-    status: false,
-  });
-  const [name_add, setName_add] = useState(lineData.name);
-
+  const [openAlert1, setOpenAlert1] = useState(false);
   useEffect(() => {
     ViewAll();
   }, []);
 
-  const ViewAll = async () => {
+  async function ViewAll() {
     var data = [];
-    const viewAll = await roleView();
+    const viewAll = await sliderView();
 
     for (var i = 0; i < viewAll.data.length; ++i) {
       var obj = {
+        id: i,
         _id: viewAll.data[i]._id,
-
         name: viewAll.data[i].name,
+        image: viewAll.data[i].image,
+        type: viewAll.data[i].type,
         created: viewAll.data[i].created,
         status: viewAll.data[i].status,
-        image: viewAll.data[i].image,
       };
 
       data.push(obj);
     }
     setSelected([]);
-    setRoleList(data);
-  };
-
-  const handleClickOpenAlert = () => {
-    setOpenAlert(true);
-  };
-  console.log('hii', location.state);
-  const handleChange = (event) => {
-    setSelectedValue(event.target.value);
-  };
-  const handleChange1 = (event) => {
-    setSelectedValue1(event.target.value);
-  };
-
-  const submitQA = async () => {
-    if (name_add.trim() === '') {
-      setState({ ...state, name: true });
-      return;
-    }
-
-    const body = {
-      _id: lineData._id,
-      name: name_add,
-      status: selectedValue1,
-    };
-    const res = await roleUpdate(body);
-    if (res.statusCode === 200) {
-      console.log('hii', res.data);
-      setOpen(false);
-      setName_add('');
-      setStatus_add('');
-      setCreated_add('');
-      setImages('');
-
-      setOpenAlert(true);
-      setTimeout(() => {
-        setOpenAlert(false);
-
-        navigate('/dashboard/roleManager');
-      }, 1000);
-    }
-    <Collapse in={openAlert}>
-      <Alert aria-hidden={true} severity="success">
-        Role Update Successfully
-      </Alert>
-    </Collapse>;
-  };
+    setSliderList(data);
+  }
 
   const handleClickOpen1 = async () => {
-    const res = await roleEdit(user_id);
-    setName_update(res.data[0].name);
-    setCourse_update(res.data[0].course);
-    setEmail_update(res.data[0].email);
-
+    const res = await sliderEdit(user_id);
     setOpen1(true);
   };
 
@@ -199,8 +136,8 @@ export default function RoleEdit() {
 
   const handleSelectAllClick = (event) => {
     if (event.target.checked) {
-      const newSelecteds = roleList.map((n) => n._id);
-      const newCollected = roleList.map((n) => n);
+      const newSelecteds = sliderList.map((n) => n._id);
+      const newCollected = sliderList.map((n) => n);
       setAllSelected(newCollected);
       setSelected(newSelecteds);
       return;
@@ -247,7 +184,7 @@ export default function RoleEdit() {
   const handleDeleteButtonPress = async () => {
     try {
       selected.map(async (m) => {
-        const res = await roleDelete(m);
+        const res = await sliderDelete(m);
         ViewAll(res);
       });
     } catch (error) {
@@ -255,62 +192,54 @@ export default function RoleEdit() {
     }
   };
 
-  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - roleList.length) : 0;
+  const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - sliderList.length) : 0;
 
-  const filteredUsers = applySortFilter(roleList, getComparator(order, orderBy), filterName);
-
+  const filteredUsers = applySortFilter(sliderList, getComparator(order, orderBy), filterName);
+  filteredUsers.reverse();
   const isUserNotFound = filteredUsers.length === 0;
 
+  console.log('after data added', location.state);
+
   return (
-    <Page title="Dashboard:Role Manager">
+    <Page title="Dashboard:Slider Manager">
       <Container maxWidth="100%">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Role Manager
+            Slider Manager
           </Typography>
-
-          <TextField
-            value={name_add}
-            required
-            error={state.name}
-            onChange={(e) => {
-              setName_add(e.target.value);
-              setState({ ...state, name: false });
+          <Button
+            variant="contained"
+            onClick={() => {
+              navigate('/dashboard/addSlider');
             }}
-            label="Role"
-            id="outlined-name"
-            sx={{ flex: 1, m: 5 }}
-          />
-
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
-            <Stack sx={{ margin: 2 }}>
-              {' '}
-              <Button
-                variant="contained"
-                onClick={() => {
-                  navigate('/dashboard/roleManager');
-                }}
-              >
-                Back
-              </Button>
-            </Stack>
-            <Button variant="contained" onClick={submitQA}>
-              Update
-            </Button>
-          </Stack>
+            startIcon={<Iconify icon="eva:plus-fill" />}
+          >
+            New Slider
+          </Button>
         </Stack>
+        {/* <AlertBar 
+          type
+          isMessageVisible
+          message
+        /> */}
         <Collapse in={openAlert}>
           <Alert aria-hidden={true} severity="success">
-            Role Update Successfully
+            Slider Added Successfully
           </Alert>
         </Collapse>
-
+        <Collapse in={openAlert1}>
+          <Alert aria-hidden={true} severity="success">
+            Slider Delete Successfully
+          </Alert>
+        </Collapse>
         <Card sx={{ maxWidth: '100%' }}>
-          <UserListToolbar
+          <SliderListToolbar
             numSelected={selected.length}
             filterName={filterName}
             exportData={allSeceted}
             onFilterName={handleFilterByName}
+            list={selected}
+            refresh={ViewAll}
             onDeleteButtonPress={handleDeleteButtonPress}
           />
 
@@ -328,9 +257,14 @@ export default function RoleEdit() {
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, _id, image, name, created, status } = row;
+                    const { id, _id, image, name, type, status, created } = row;
                     const isItemSelected = selected.indexOf(_id) !== -1;
-                    var date = new Date(created).toLocaleDateString('en-US');
+
+                    var d = new Date(created);
+                    var date = d.getDate();
+                    var month = d.getMonth() + 1; // Since getMonth() returns month from 0-11 not 1-12
+                    var year = d.getFullYear();
+                    var newDate = date + '-' + month + '-' + year;
 
                     return (
                       <TableRow
@@ -346,13 +280,20 @@ export default function RoleEdit() {
                         </TableCell>
 
                         <TableCell align="left">{name}</TableCell>
-                        <TableCell align="left">{date.toString()}</TableCell>
+                        <TableCell component="th" scope="row" padding="normal">
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar variant="square" src={image} />
+                          </Stack>
+                        </TableCell>
+                        <TableCell align="left">{type}</TableCell>
+                        <TableCell align="left">{newDate}</TableCell>
+
                         <TableCell align="left">
                           <Switch
                             checked={status}
                             onChange={async (e) => {
                               const body = { _id: _id, status: !status };
-                              var res = await RoleStatus(body);
+                              var res = await sliderStatus(body);
                               await ViewAll();
                             }}
                           />
@@ -361,11 +302,15 @@ export default function RoleEdit() {
                         <TableCell align="right">
                           <UserMoreMenu
                             onDeleteButtonPress={async () => {
-                              const res = await roleDelete(_id);
+                              const res = await sliderDelete(_id);
+                              setOpenAlert1(true);
+                              setTimeout(() => {
+                                setOpenAlert1(false);
+                              }, 3000);
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editRole', {
+                              navigate('/dashboard/editSlider', {
                                 state: { lineData: row },
                               });
                             }}
@@ -417,12 +362,12 @@ export default function RoleEdit() {
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
         <MenuItem sx={{ color: 'text.secondary' }}>
-          <ListItemIcon onClick={handleClickOpen1}>
+          <ListItemIcon>
             <Iconify icon="eva:edit-fill" width={24} height={24} />
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/roleManager', {
+              navigate('/dashboard/editSlider', {
                 state: { lineData },
               });
             }}
@@ -439,7 +384,7 @@ export default function RoleEdit() {
             primary="Delete"
             primaryTypographyProps={{ variant: 'body2' }}
             onClick={async (e) => {
-              const res = await roleDelete(user_id);
+              const res = await sliderDelete(user_id);
               ViewAll(res);
             }}
           />

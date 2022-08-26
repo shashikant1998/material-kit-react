@@ -21,6 +21,7 @@ import {
   TableContainer,
   TablePagination,
   Menu,
+  Autocomplete,
   MenuItem,
   ListItemIcon,
   ListItemText,
@@ -32,7 +33,7 @@ import Label from '../../components/Label';
 import Scrollbar from '../../components/Scrollbar';
 import Iconify from '../../components/Iconify';
 import SearchNotFound from '../../components/SearchNotFound';
-import { UserListHead, UserListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
+import { UserListHead, CategoryListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
 import { categoryAdd } from '../../services/categoryServices';
 import { categoryDelete, categoryView, categoryEdit, CategoryStatus } from '../../services/categoryServices';
 import Collapse from '@mui/material/Collapse';
@@ -77,7 +78,7 @@ function applySortFilter(array, comparator, query) {
   }
   return stabilizedThis.map((el) => el[0]);
 }
-
+var options = ['Shoes', 'T-Shirt', 'Shirt', "Mobile's"];
 export default function CategoryManager() {
   const navigate = useNavigate();
   const ref = useRef(null);
@@ -89,6 +90,7 @@ export default function CategoryManager() {
   const [open, setOpen] = useState(false);
   const [created_add, setCreated_add] = useState('');
   const [status_add, setStatus_add] = useState('');
+  const [inputNameValue, setInputNameValue] = useState('');
   const [name_update, setName_update] = useState('');
   const [course_update, setCourse_update] = useState('');
   const [email_update, setEmail_update] = useState('');
@@ -148,33 +150,22 @@ export default function CategoryManager() {
     };
     console.log(body);
     const res = await categoryAdd(body);
-    if (res.data.statusCode === 200) {
+    if (res.statusCode === 200) {
       console.log(res.data);
       setOpen(false);
       setName_add('');
       setCreated_add('');
       setStatus_add('');
       setImages('');
-      // setNotify({
-      //   isOpen: true,
-      //   message: 'Submitted Successfully',
-      //   type: 'success',
-      // });
-
       setOpenAlert(true);
+      setTimeout(() => {
+        setOpenAlert(false);
+      }, 3000);
     }
     ViewAll();
   };
 
-  const statusChange = async () => {
-    if ('status' == 'Active') {
-      console.log('Inactive');
-    } else {
-      console.log('Active');
-    }
-  };
-
-  const headerKeys = Object.keys(Object.assign({}, ...array));
+  // const headerKeys = Object.keys(Object.assign({}, ...array));
 
   const handleClickOpen1 = async () => {
     const res = await categoryEdit(user_id);
@@ -267,17 +258,20 @@ export default function CategoryManager() {
             Category Manager
           </Typography>
 
-          <TextField
+          <Autocomplete
             required
-            error={state.name}
             value={name_add}
-            onChange={(e) => {
-              setName_add(e.target.value);
-              setState({ ...state, name: false });
+            onChange={(event, newValue) => {
+              setName_add(newValue);
             }}
-            label="Category"
-            id="outlined-name"
-            sx={{ flex: 1, m: 5 }}
+            inputValue={inputNameValue}
+            onInputChange={(event, newInputValue) => {
+              setInputNameValue(newInputValue);
+            }}
+            id="controllable-states-demo"
+            options={options}
+            sx={{ width: 450 }}
+            renderInput={(params) => <TextField error={state.name} {...params} label="Category" />}
           />
           <Stack direction="row" alignItems="center" mb={5} sx={{ margin: 2 }}>
             <Avatar alt="images" src={images} sx={{ margin: 2 }} />
@@ -299,33 +293,25 @@ export default function CategoryManager() {
               </Button>
             </ImagePicker>
           </Stack>
-
-          {/* <Button
-            variant="contained"
-            onClick={() => {
-              navigate('/dashboard/addRole');
-            }}
-            startIcon={<Iconify icon="eva:plus-fill" />}
-          >
-            New Role
-          </Button> */}
           <Button variant="contained" onClick={submitQA}>
-            Submit
+            Add
           </Button>
         </Stack>
         <Collapse in={openAlert}>
           <Alert aria-hidden={true} severity="success">
-            This is a success alert — check it out!
+            Category Added Successfully
           </Alert>
         </Collapse>
 
         <Card sx={{ maxWidth: '100%' }}>
-          <UserListToolbar
+          <CategoryListToolbar
             numSelected={selected.length}
             filterName={filterName}
             exportData={allSeceted}
             onFilterName={handleFilterByName}
             onDeleteButtonPress={handleDeleteButtonPress}
+            list={selected}
+            refresh={ViewAll}
           />
 
           <Scrollbar>
@@ -344,7 +330,12 @@ export default function CategoryManager() {
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
                     const { id, _id, image, name, created, status } = row;
                     const isItemSelected = selected.indexOf(_id) !== -1;
-
+                    // var date = created.format('DD/MM/YYYY');
+                    var d = new Date(created);
+                    var date = d.getDate();
+                    var month = d.getMonth() + 1; // Since getMonth() returns month from 0-11 not 1-12
+                    var year = d.getFullYear();
+                    var newDate = date + '-' + month + '-' + year;
                     return (
                       <TableRow
                         hover
@@ -368,7 +359,7 @@ export default function CategoryManager() {
                           </Stack>
                         </TableCell>
                         {/* <TableCell align="left">{name}</TableCell> */}
-                        <TableCell align="left">{created}</TableCell>
+                        <TableCell align="left">{newDate}</TableCell>
                         <TableCell align="left">
                           <Switch
                             checked={status}
@@ -392,7 +383,7 @@ export default function CategoryManager() {
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editCategory', {
+                              navigate('/dashboard/categoryEdit', {
                                 state: { lineData: row },
                               });
                             }}
@@ -449,7 +440,7 @@ export default function CategoryManager() {
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/editCategory', {
+              navigate('/dashboard/categoryEdit', {
                 state: { lineData },
               });
             }}

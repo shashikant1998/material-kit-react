@@ -18,8 +18,8 @@ import {
 // component
 import { useState } from 'react';
 
-import Iconify from '../../../components/Iconify';
-import { roleDelete } from '../../../services/roleServices';
+import Iconify from '../../../../components/Iconify';
+import { sliderDelete } from '../../../../services/sliderServices';
 
 // ----------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ const SearchStyle = styled(OutlinedInput)(({ theme }) => ({
 
 // ----------------------------------------------------------------------
 
-UserListToolbar.propTypes = {
+SliderListToolbar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
   exportData: PropTypes.array,
@@ -57,7 +57,7 @@ UserListToolbar.propTypes = {
   onDeleteButtonPress: PropTypes.func,
 };
 
-export default function UserListToolbar({
+export default function SliderListToolbar({
   numSelected,
   filterName,
   onFilterName,
@@ -79,16 +79,16 @@ export default function UserListToolbar({
   const handleCloseDelete = () => {
     setOpenDelete(false);
   };
+
   const deleteAPI = async () => {
     for (var i = 0; i < list.length; ++i) {
-      var res = await roleDelete(list[i]);
+      var res = await sliderDelete(list[i]);
       console.log(res.data);
       setOpenAlert(true);
       setTimeout(() => {
         setOpenAlert(false);
       }, 3000);
     }
-
     setOpenDelete(false);
     await refresh();
   };
@@ -109,7 +109,7 @@ export default function UserListToolbar({
         <SearchStyle
           value={filterName}
           onChange={onFilterName}
-          placeholder="Search Role..."
+          placeholder="Search Slider..."
           startAdornment={
             <InputAdornment position="start">
               <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
@@ -119,7 +119,7 @@ export default function UserListToolbar({
       )}
       <Collapse in={openAlert}>
         <Alert aria-hidden={true} severity="success">
-          Role Delete Successfully
+          Slider Delete Successfully
         </Alert>
       </Collapse>
       {numSelected > 0 ? (

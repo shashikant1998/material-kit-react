@@ -5,19 +5,28 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 
+// redux
+import { Provider } from 'react-redux';
+import { createStore, applyMiddleware, compose } from 'redux';
+import thunk from 'redux-thunk';
+
+import { reducers } from './reducers';
+
 //
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 import reportWebVitals from './reportWebVitals';
 
 // ----------------------------------------------------------------------
-
+const store = createStore(reducers, compose(applyMiddleware(thunk)));
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 root.render(
   <HelmetProvider>
     <BrowserRouter>
-      <App />
+      <Provider store={store}>
+        <App />
+      </Provider>
     </BrowserRouter>
   </HelmetProvider>
 );

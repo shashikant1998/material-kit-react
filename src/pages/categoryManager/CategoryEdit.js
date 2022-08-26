@@ -2,7 +2,8 @@ import { filter } from 'lodash';
 import { useEffect, useState, useRef } from 'react';
 import { Link as RouterLink, useNavigate, useLocation } from 'react-router-dom';
 import { Alert, Switch } from '@mui/material';
-
+import { ImagePicker } from 'react-file-picker';
+import PhotoCamera from '@mui/icons-material/PhotoCamera';
 // material
 import {
   Card,
@@ -12,7 +13,9 @@ import {
   Checkbox,
   TableRow,
   TableBody,
+  Avatar,
   TableCell,
+  Autocomplete,
   Container,
   Typography,
   TableContainer,
@@ -29,14 +32,14 @@ import Scrollbar from '../../components/Scrollbar';
 import Iconify from '../../components/Iconify';
 import SearchNotFound from '../../components/SearchNotFound';
 import { UserListHead, UserListToolbar, UserMoreMenu } from '../../sections/@dashboard/user';
-import { roleUpdate } from '../../services/roleServices';
-import { roleDelete, roleView, roleEdit, RoleStatus } from '../../services/roleServices';
+import { categoryUpdate } from '../../services/categoryServices';
+import { categoryDelete, categoryView, categoryEdit, CategoryStatus } from '../../services/categoryServices';
 import Collapse from '@mui/material/Collapse';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
-  { id: 'name', label: 'Role Name', alignRight: false },
+  { id: 'name', label: 'Category Name', alignRight: false },
   { id: 'created', label: 'Created', alignRight: false },
   { id: 'status', label: 'status', alignRight: false },
 
@@ -73,8 +76,9 @@ function applySortFilter(array, comparator, query) {
   }
   return stabilizedThis.map((el) => el[0]);
 }
+var options = ['Shoes', 'T-Shirt', 'Shirt', "Mobile's"];
 
-export default function RoleEdit() {
+export default function CategoryEdit() {
   const navigate = useNavigate();
   const location = useLocation();
   const { lineData } = location.state;
@@ -91,14 +95,15 @@ export default function RoleEdit() {
   const [email_update, setEmail_update] = useState('');
   const [order, setOrder] = useState('asc');
   const [selected, setSelected] = useState([]);
-  const [orderBy, setOrderBy] = useState('name');
+  const [orderBy, setOrderBy] = useState('created');
   const [filterName, setFilterName] = useState('');
+  const [inputNameValue, setInputNameValue] = useState('');
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [open1, setOpen1] = useState(false);
   const [allSeceted, setAllSelected] = useState([]);
   const [array, setArray] = useState([]);
   const [openAlert, setOpenAlert] = useState(false);
-  const [images, setImages] = useState('');
+  const [images, setImages] = useState(lineData.image);
   const [selectedValue1, setSelectedValue1] = useState(lineData.status);
   const [selectedValue, setSelectedValue] = useState(lineData.status);
 
@@ -115,7 +120,7 @@ export default function RoleEdit() {
 
   const ViewAll = async () => {
     var data = [];
-    const viewAll = await roleView();
+    const viewAll = await categoryView();
 
     for (var i = 0; i < viewAll.data.length; ++i) {
       var obj = {
@@ -153,9 +158,10 @@ export default function RoleEdit() {
     const body = {
       _id: lineData._id,
       name: name_add,
+      image: images,
       status: selectedValue1,
     };
-    const res = await roleUpdate(body);
+    const res = await categoryUpdate(body);
     if (res.statusCode === 200) {
       console.log('hii', res.data);
       setOpen(false);
@@ -168,7 +174,7 @@ export default function RoleEdit() {
       setTimeout(() => {
         setOpenAlert(false);
 
-        navigate('/dashboard/roleManager');
+        navigate('/dashboard/categoryManager');
       }, 1000);
     }
     <Collapse in={openAlert}>
@@ -179,7 +185,7 @@ export default function RoleEdit() {
   };
 
   const handleClickOpen1 = async () => {
-    const res = await roleEdit(user_id);
+    const res = await categoryEdit(user_id);
     setName_update(res.data[0].name);
     setCourse_update(res.data[0].course);
     setEmail_update(res.data[0].email);
@@ -247,7 +253,7 @@ export default function RoleEdit() {
   const handleDeleteButtonPress = async () => {
     try {
       selected.map(async (m) => {
-        const res = await roleDelete(m);
+        const res = await categoryDelete(m);
         ViewAll(res);
       });
     } catch (error) {
@@ -262,25 +268,48 @@ export default function RoleEdit() {
   const isUserNotFound = filteredUsers.length === 0;
 
   return (
-    <Page title="Dashboard:Role Manager">
+    <Page title="Dashboard:Category Manager">
       <Container maxWidth="100%">
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Role Manager
+            Category Manager
           </Typography>
 
-          <TextField
-            value={name_add}
+          <Autocomplete
             required
-            error={state.name}
-            onChange={(e) => {
-              setName_add(e.target.value);
-              setState({ ...state, name: false });
+            value={name_add}
+            onChange={(event, newValue) => {
+              setName_add(newValue);
             }}
-            label="Role"
-            id="outlined-name"
-            sx={{ flex: 1, m: 5 }}
+            inputValue={inputNameValue}
+            onInputChange={(event, newInputValue) => {
+              setInputNameValue(newInputValue);
+            }}
+            id="controllable-states-demo"
+            options={options}
+            sx={{ width: 450 }}
+            renderInput={(params) => <TextField error={state.name} {...params} label="Category" />}
           />
+          <Stack direction="row" alignItems="center" mb={5} sx={{ margin: 2 }}>
+            <Avatar alt="images" src={images} sx={{ margin: 2 }} />
+            <ImagePicker
+              extensions={['jpg', 'jpeg', 'png']}
+              dims={{
+                minWidth: 100,
+                maxWidth: 1340,
+                minHeight: 100,
+                maxHeight: 1040,
+              }}
+              onChange={(base64) => setImages(base64)}
+              onError={(errMsg) => {
+                console.log(errMsg);
+              }}
+            >
+              <Button variant="outlined" startIcon={<PhotoCamera />}>
+                Upload
+              </Button>
+            </ImagePicker>
+          </Stack>
 
           <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5} sx={{ margin: 2 }}>
             <Stack sx={{ margin: 2 }}>
@@ -288,7 +317,7 @@ export default function RoleEdit() {
               <Button
                 variant="contained"
                 onClick={() => {
-                  navigate('/dashboard/roleManager');
+                  navigate('/dashboard/categoryManager');
                 }}
               >
                 Back
@@ -301,7 +330,7 @@ export default function RoleEdit() {
         </Stack>
         <Collapse in={openAlert}>
           <Alert aria-hidden={true} severity="success">
-            Role Update Successfully
+            Category Update Successfully
           </Alert>
         </Collapse>
 
@@ -345,14 +374,21 @@ export default function RoleEdit() {
                           <Checkbox checked={isItemSelected} onChange={(event) => handleClick(event, row)} />
                         </TableCell>
 
-                        <TableCell align="left">{name}</TableCell>
+                        <TableCell component="th" scope="row" padding="normal">
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Avatar alt={name} src={image} />
+                            <Typography variant="subtitle2" noWrap>
+                              {name}
+                            </Typography>
+                          </Stack>
+                        </TableCell>
                         <TableCell align="left">{date.toString()}</TableCell>
                         <TableCell align="left">
                           <Switch
                             checked={status}
                             onChange={async (e) => {
                               const body = { _id: _id, status: !status };
-                              var res = await RoleStatus(body);
+                              var res = await CategoryStatus(body);
                               await ViewAll();
                             }}
                           />
@@ -361,11 +397,11 @@ export default function RoleEdit() {
                         <TableCell align="right">
                           <UserMoreMenu
                             onDeleteButtonPress={async () => {
-                              const res = await roleDelete(_id);
+                              const res = await categoryDelete(_id);
                               ViewAll(res);
                             }}
                             onEditButtonPress={() => {
-                              navigate('/dashboard/editRole', {
+                              navigate('/dashboard/editCategory', {
                                 state: { lineData: row },
                               });
                             }}
@@ -422,7 +458,7 @@ export default function RoleEdit() {
           </ListItemIcon>
           <ListItemText
             onClick={() => {
-              navigate('/dashboard/roleManager', {
+              navigate('/dashboard/categoryManager', {
                 state: { lineData },
               });
             }}
@@ -439,7 +475,7 @@ export default function RoleEdit() {
             primary="Delete"
             primaryTypographyProps={{ variant: 'body2' }}
             onClick={async (e) => {
-              const res = await roleDelete(user_id);
+              const res = await categoryDelete(user_id);
               ViewAll(res);
             }}
           />

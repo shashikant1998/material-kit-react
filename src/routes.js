@@ -13,9 +13,14 @@ import DashboardApp from './pages/DashboardApp';
 import RoleEdit from './pages/roleManager/roleEdit';
 // import EditRole from './pages/roleManager/EditRole';
 import RoleManager from './pages/roleManager/RoleManager';
+import SliderManager from './pages/sliderManager/sliderManager';
+import AddSlider from './pages/sliderManager/AddSlider';
+import EditSlider from './pages/sliderManager/EditSlider';
 import AddCategory from './pages/categoryManager/AddCategory';
-import EditCategory from './pages/categoryManager/EditCategory';
+//import EditCategory from './pages/categoryManager/EditCategory';
+import CategoryEdit from './pages/categoryManager/CategoryEdit';
 import CategoryManager from './pages/categoryManager/categoryManager';
+import { element } from 'prop-types';
 
 // ----------------------------------------------------------------------
 
@@ -30,10 +35,14 @@ export default function Router() {
         { path: 'addRole', element: <AddRole /> },
         // { path: 'editRole', element: <EditRole /> },
         { path: 'roleEdit', element: <RoleEdit /> },
+        { path: 'sliderManager', element: <SliderManager /> },
+        { path: 'addSlider', element: <AddSlider /> },
+        { path: 'editSlider', element: <EditSlider /> },
         { path: 'products', element: <Products /> },
         { path: 'blog', element: <Blog /> },
         { path: 'addCategory', element: <AddCategory /> },
-        { path: 'editCategory', element: <EditCategory /> },
+        //{ path: 'editCategory', element: <EditCategory /> },
+        { path: 'categoryEdit', element: <CategoryEdit /> },
         { path: 'categoryManager', element: <CategoryManager /> },
       ],
     },

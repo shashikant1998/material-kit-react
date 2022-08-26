@@ -17,6 +17,11 @@ const navConfig = [
     icon: getIcon('eva:people-fill'),
   },
   {
+    title: 'slider',
+    path: '/dashboard/sliderManager',
+    icon: getIcon('clarity:image-gallery-solid'),
+  },
+  {
     title: 'category',
     path: '/dashboard/categoryManager',
     icon: getIcon('bxs:category'),

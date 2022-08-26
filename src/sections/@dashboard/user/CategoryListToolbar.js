@@ -1,9 +1,24 @@
 import PropTypes from 'prop-types';
 // material
 import { styled } from '@mui/material/styles';
-import { Stack, Toolbar, Tooltip, IconButton, Typography, OutlinedInput, InputAdornment } from '@mui/material';
+import { useState } from 'react';
+import {
+  Toolbar,
+  Tooltip,
+  IconButton,
+  Typography,
+  OutlinedInput,
+  InputAdornment,
+  DialogActions,
+  Dialog,
+  DialogTitle,
+  Button,
+  Alert,
+  Collapse,
+} from '@mui/material';
 // component
 import Iconify from '../../../components/Iconify';
+import { categoryDelete } from 'src/services/categoryServices';
 // ----------------------------------------------------------------------
 
 const RootStyle = styled(Toolbar)(({ theme }) => ({
@@ -28,9 +43,9 @@ const SearchStyle = styled(OutlinedInput)(({ theme }) => ({
 
 //---------------------------------------------------------------------
 
-// ----------------------------------------------------------------------
+// --------------------------------------------------------------------
 
-categoryListToolbar.propTypes = {
+CategoryListToolbar.propTypes = {
   numSelected: PropTypes.number,
   filterName: PropTypes.string,
   exportData: PropTypes.array,
@@ -40,14 +55,42 @@ categoryListToolbar.propTypes = {
   onDeleteButtonPress: PropTypes.func,
 };
 
-export default function categoryListToolbar({
+export default function CategoryListToolbar({
   numSelected,
   filterName,
   onFilterName,
+  list,
+  refresh,
   exportData,
   onExportLinkPress,
   onDeleteButtonPress,
 }) {
+  const [openAlert, setOpenAlert] = useState(false);
+  const [openDelete, setOpenDelete] = useState(false);
+
+  const handleClickDeleteOpen = () => {
+    console.log(list);
+
+    setOpenDelete(true);
+  };
+
+  const handleCloseDelete = () => {
+    setOpenDelete(false);
+  };
+
+  const deleteAPI = async () => {
+    for (var i = 0; i < list.length; ++i) {
+      var res = await categoryDelete(list[i]);
+      console.log(res.data);
+      setOpenAlert(true);
+      setTimeout(() => {
+        setOpenAlert(false);
+      }, 3000);
+    }
+
+    setOpenDelete(false);
+    await refresh();
+  };
   return (
     <RootStyle
       sx={{
@@ -65,7 +108,7 @@ export default function categoryListToolbar({
         <SearchStyle
           value={filterName}
           onChange={onFilterName}
-          placeholder="Search category..."
+          placeholder="Search Role..."
           startAdornment={
             <InputAdornment position="start">
               <Iconify icon="eva:search-fill" sx={{ color: 'text.disabled', width: 20, height: 20 }} />
@@ -73,16 +116,33 @@ export default function categoryListToolbar({
           }
         />
       )}
-
+      <Collapse in={openAlert}>
+        <Alert aria-hidden={true} severity="success">
+          Role Delete Successfully
+        </Alert>
+      </Collapse>
       {numSelected > 0 ? (
-        <Stack direction="row">
-          <Tooltip title="Delete" onClick={onDeleteButtonPress}>
-            <IconButton>
-              <Iconify icon="eva:trash-2-fill" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
-      ) : null}
+        <Tooltip title="Delete">
+          <IconButton onClick={handleClickDeleteOpen}>
+            <Iconify icon="eva:trash-2-fill" />
+          </IconButton>
+        </Tooltip>
+      ) : (
+        <Tooltip title="Filter list">
+          <IconButton>
+            <Iconify icon="ic:round-filter-list" />
+          </IconButton>
+        </Tooltip>
+      )}
+
+      <Dialog open={openDelete} onClose={handleCloseDelete}>
+        <DialogTitle>Are you sure you want to Delete ?</DialogTitle>
+
+        <DialogActions>
+          <Button onClick={handleCloseDelete}>No</Button>
+          <Button onClick={deleteAPI}>Yes</Button>
+        </DialogActions>
+      </Dialog>
     </RootStyle>
   );
 }
